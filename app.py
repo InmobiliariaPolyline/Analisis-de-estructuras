@@ -4,6 +4,7 @@ import pandas as pd
 from datetime import datetime
 import base64
 from pathlib import Path
+import google.generativeai as genai
 
 # ==================== CONFIGURACIÓN ====================
 st.set_page_config(
@@ -22,270 +23,52 @@ def get_image_base64(image_path):
     except:
         return None
 
-# Intentar cargar la imagen del logo
-logo_path = Path("logo.png")
-logo_base64 = get_image_base64(logo_path)
+# Ruta específica de la nueva imagen personalizada
+nueva_imagen_path = "C:/EMPRESA/app/WhatsApp_Image_2026-03-22_at_9.48.16_PM-removebg-preview.png"
+logo_base64 = get_image_base64(nueva_imagen_path)
+
+# Si no se encuentra la imagen, se usa la antigua ruta como respaldo (opcional)
+if not logo_base64:
+    logo_path = Path("logo.png")
+    logo_base64 = get_image_base64(logo_path)
 
 # ==================== CSS TEMA OSCURO MEJORADO ====================
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
-    
-    .stApp { 
-        background-color: #0E1117 !important; 
-    }
-    
-    /* ===== TEXTOS PRINCIPALES EN BLANCO ===== */
-    .main h1 {
-        color: #FFFFFF !important;
-        font-family: 'Poppins', sans-serif;
-        font-weight: 700 !important;
-    }
-    
-    .main h2, .main h3, .main h4, .main h5, .main h6,
-    .main p, .main span, .main li,
-    div[data-testid="stMarkdownContainer"] p,
-    div[data-testid="stMarkdownContainer"] h1,
-    div[data-testid="stMarkdownContainer"] h2,
-    div[data-testid="stMarkdownContainer"] h3,
-    div[data-testid="stMarkdownContainer"] h4 {
-        color: #FFFFFF !important;
-        font-family: 'Poppins', sans-serif;
-    }
-    
-    /* ===== ELEMENTOS ESPECÍFICOS SOLICITADOS ===== */
-    .main h2:contains("📐 Predimensionamiento Rápido de Elementos"),
-    .main h3:contains("Vigas"),
-    .main h3:contains("Columnas"),
-    .main h3:contains("Losas y Aligerados") {
-        color: #FFFFFF !important;
-    }
-    
-    .main h2:contains("🔲 Evaluación y Diseño de Zapatas Aisladas"),
-    .main h3:contains("📥 Datos de entrada"),
-    .main h3:contains("📊 Resultados de verificación") {
-        color: #FFFFFF !important;
-    }
-    
-    .main h2:contains("🏛️ Análisis y Diseño de Columnas y Placas"),
-    .main h3:contains("📥 Datos de la columna"),
-    .main h4:contains("Dimensiones"),
-    .main h4:contains("Cargas"),
-    .main h4:contains("Acero"),
-    .main h3:contains("📊 Resultados") {
-        color: #FFFFFF !important;
-    }
-    
-    .main h2:contains("➖ Análisis y Diseño de Vigas"),
-    .main h3:contains("📥 Datos de la viga"),
-    .main h4:contains("Geometría"),
-    .main h4:contains("Cargas"),
-    .main h4:contains("Acero"),
-    .main h3:contains("📊 Resultados") {
-        color: #FFFFFF !important;
-    }
-    
-    .main h2:contains("🧱 Análisis de Losas y Prelosas"),
-    .main h3:contains("📥 Datos de la losa"),
-    .main h4:contains("Cargas"),
-    .main h3:contains("📊 Resultados"),
-    .main strong:contains("Acero por temperatura") {
-        color: #FFFFFF !important;
-    }
-    
-    .main h2:contains("🤖 Consultor Técnico Estructural"),
-    .main h3:contains("📌 Cuantía mínima (E.060)"),
-    .main h3:contains("📌 Límites de deriva"),
-    .main h3:contains("📌 Zapatas (E.060)") {
-        color: #FFFFFF !important;
-    }
-    
-    /* Inputs y selects - Mantener fondo intacto */
-    div[data-baseweb="input"], 
-    div[data-baseweb="base-input"], 
-    div[data-baseweb="select"] > div { 
-        background-color: #262730 !important; 
-        border: 1px solid #4A4A4A !important; 
-        border-radius: 8px !important;
-        transition: all 0.3s ease;
-    }
-    
-    div[data-baseweb="input"]:hover, 
-    div[data-baseweb="select"] > div:hover {
-        border-color: #FF4B4B !important;
-    }
-    
-    /* Inputs numéricos */
-    div[data-baseweb="input"] input { 
-        color: #FFFFFF !important; 
-        -webkit-text-fill-color: #FFFFFF !important; 
-        caret-color: #FF4B4B !important; 
-        font-weight: 500 !important; 
-        background-color: transparent !important; 
-    }
-    
-    /* ===== ESTILOS PARA SELECT BOX ===== */
-    /* ATAQUE DIRECTO AL TEXTO DEL VALOR SELECCIONADO */
-    
-    /* Selector para el elemento singleValue (el texto seleccionado) */
-    div[data-baseweb="select"] div[class*="singleValue"],
-    div[data-baseweb="select"] div[class*="SingleValue"],
-    div[data-baseweb="select"] span[class*="singleValue"],
-    div[data-baseweb="select"] span[class*="SingleValue"],
-    div[data-baseweb="select"] [class*="singleValue"],
-    div[data-baseweb="select"] [class*="SingleValue"] {
-        color: #FFFFFF !important;
-        -webkit-text-fill-color: #FFFFFF !important;
-        opacity: 1 !important;
-        fill: #FFFFFF !important;
-        text-shadow: none !important;
-    }
-    
-    /* Selector para cualquier span que contenga texto dentro del select */
-    div[data-baseweb="select"] span:not([class*="indicator"]):not([class*="dropdown"]):not(svg *) {
-        color: #FFFFFF !important;
-        -webkit-text-fill-color: #FFFFFF !important;
-        opacity: 1 !important;
-    }
-    
-    /* Selector para el div contenedor del texto */
-    div[data-baseweb="select"] div[role="combobox"] div:first-of-type {
-        color: #FFFFFF !important;
-    }
-    
-    /* ESTILOS PARA SELECT DISABLED - MÁS ESPECÍFICOS AÚN */
-    div[data-baseweb="select"][aria-disabled="true"] div[class*="singleValue"],
-    div[data-baseweb="select"][aria-disabled="true"] [class*="singleValue"],
-    div[data-baseweb="select"][disabled] div[class*="singleValue"],
-    div[data-baseweb="select"][disabled] [class*="singleValue"],
-    .stSelectbox[aria-disabled="true"] div[class*="singleValue"],
-    .stSelectbox[disabled] div[class*="singleValue"],
-    .stSelectbox[aria-disabled="true"] [class*="singleValue"],
-    .stSelectbox[disabled] [class*="singleValue"] {
-        color: #FFFFFF !important;
-        -webkit-text-fill-color: #FFFFFF !important;
-        opacity: 1 !important;
-    }
-    
-    /* Forzar spans dentro de selects disabled */
-    div[data-baseweb="select"][aria-disabled="true"] span,
-    div[data-baseweb="select"][disabled] span,
-    .stSelectbox[aria-disabled="true"] span,
-    .stSelectbox[disabled] span {
-        color: #FFFFFF !important;
-        -webkit-text-fill-color: #FFFFFF !important;
-        opacity: 1 !important;
-    }
-    
-    /* Eliminar cualquier opacidad heredada */
-    div[data-baseweb="select"][aria-disabled="true"],
-    div[data-baseweb="select"][disabled],
-    .stSelectbox[aria-disabled="true"],
-    .stSelectbox[disabled] {
-        opacity: 1 !important;
-    }
-    
-    /* Forzar el color del texto en el elemento que realmente lo muestra */
-    div[data-baseweb="select"] div:not([class*="indicator"]):not([class*="dropdown"]) {
-        color: #FFFFFF !important;
-    }
-    
-    /* Flecha del select */
-    div[data-baseweb="select"] svg {
-        fill: #FFFFFF !important;
-        opacity: 1 !important;
-    }
-    
-    /* ===== ESTILOS PARA EXPANDERS ===== */
-    div[data-testid="stExpander"] {
-        background-color: #262730 !important;
-        border: 1px solid #4A4A4A !important;
-        border-radius: 12px !important;
-        margin: 1rem 0 !important;
-    }
-    
-    /* Título del expander - siempre blanco */
-    div[data-testid="stExpander"] details summary span,
-    div[data-testid="stExpander"] details summary p {
-        color: #FFFFFF !important;
-        font-weight: 600 !important;
-    }
-    
-    /* Expander abierto - contenido interno NEGRO (excepto selects) */
-    div[data-testid="stExpander"] details[open] .stMarkdown p,
-    div[data-testid="stExpander"] details[open] div[data-testid="stMarkdownContainer"] p,
-    div[data-testid="stExpander"] details[open] .element-container p,
-    div[data-testid="stExpander"] details[open] label p {
-        color: #000000 !important;
-        -webkit-text-fill-color: #000000 !important;
-    }
-    
-    /* EXCEPCIÓN: Los selects dentro del expander mantienen texto blanco (incluyendo disabled) */
-    div[data-testid="stExpander"] details[open] div[data-baseweb="select"] [class*="singleValue"],
-    div[data-testid="stExpander"] details[open] div[data-baseweb="select"] [class*="SingleValue"],
-    div[data-testid="stExpander"] details[open] div[data-baseweb="select"] [class*="single-value"] {
-        color: #FFFFFF !important;
-        -webkit-text-fill-color: #FFFFFF !important;
-    }
-    
-           /* ===== FORZAR TEXTOS ESPECÍFICOS A BLANCO ===== */
-    /* Estos textos deben ser blancos SÍ O SÍ */
-    div[data-testid="stExpander"] details[open] .stMarkdown p:contains("Área tributaria de columna"),
-    div[data-testid="stExpander"] details[open] .stMarkdown p:contains("Evaluando con"),
-    div[data-testid="stExpander"] details[open] .stMarkdown p:contains("Capacidad portante"),
-    div[data-testid="stExpander"] details[open] .stMarkdown p:contains("qₐ"),
-    div[data-testid="stExpander"] details[open] .stMarkdown p:contains("Ancho B"),
-    div[data-testid="stExpander"] details[open] .stMarkdown p:contains("Largo L"),
-    div[data-testid="stExpander"] details[open] .stMarkdown p:contains("Peralte h"),
-    div[data-testid="stExpander"] details[open] .stMarkdown p:contains("Diámetro de acero"),
-    div[data-testid="stExpander"] details[open] .stMarkdown p:contains("Espaciamiento"),
-    div[data-testid="stExpander"] details[open] .stMarkdown p:contains("@"),
-    div[data-testid="stExpander"] details[open] .stMarkdown p:contains("Recubrimiento"),
-    div[data-testid="stExpander"] details[open] .stMarkdown p:contains("Lado de columna"),
-    div[data-testid="stExpander"] details[open] .stMarkdown p:contains("Otro lado") {
-        color: #FFFFFF !important;
-        -webkit-text-fill-color: #FFFFFF !important;
-        background-color: transparent !important;
-    }
-    
-    /* RESTAURAR color negro para los títulos de los expanders si es necesario */
-    div[data-testid="stExpander"] details[open] .stMarkdown p:contains("Cargas y suelo"),
-    div[data-testid="stExpander"] details[open] .stMarkdown p:contains("Dimensiones de zapata"),
-    div[data-testid="stExpander"] details[open] .stMarkdown p:contains("Acero de refuerzo"),
-    div[data-testid="stExpander"] details[open] .stMarkdown p:contains("Columna soportada") {
-        color: #000000 !important;
-        -webkit-text-fill-color: #000000 !important;
-    }
-            
-    /* Botones */
-    .stButton > button {
-        background: linear-gradient(135deg, #FF4B4B 0%, #FF6B6B 100%) !important;
-        color: white !important;
-        font-weight: 600 !important;
-        border: none !important;
-        border-radius: 8px !important;
-        padding: 0.75rem 2rem !important;
-        transition: all 0.3s ease !important;
-        text-transform: uppercase !important;
-        letter-spacing: 1px !important;
-    }
-    
-    .stButton > button:hover {
-        transform: translateY(-2px) !important;
-        box-shadow: 0 5px 15px rgba(255,75,75,0.3) !important;
-    }
-    
-    /* Sidebar */
-    section[data-testid="stSidebar"] { 
-        background-color: #1E1E1E !important;
-        border-right: 1px solid #333 !important;
-    }
-    
-    section[data-testid="stSidebar"] * { 
-        color: #FFFFFF !important; 
-    }
-    
-    /* Logo personalizado */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+/* ===== APP GENERAL ===== */
+
+.stApp { 
+    background-color: #0E1117 !important; 
+    font-family: 'Poppins', sans-serif;
+}
+
+/* ===== TEXTO GLOBAL ===== */
+
+html, body, p, span, label, div, li,
+h1, h2, h3, h4, h5, h6 {
+
+    color: #FFFFFF !important;
+}
+
+/* Markdown */
+
+div[data-testid="stMarkdownContainer"] * {
+    color: #FFFFFF !important;
+}
+
+/* ===== INPUTS ===== */
+
+div[data-baseweb="input"], 
+div[data-baseweb="base-input"], 
+div[data-baseweb="select"] > div { 
+
+    background-color: #262730 !important; 
+    border: 1px solid #4A4A4A !important; 
+    border-radius: 8px !important;
+}
+             /* Logo personalizado */
     .sidebar-logo { 
         text-align: center; 
         padding: 1.5rem 1rem; 
@@ -304,6 +87,17 @@ st.markdown("""
         height: auto;
         max-height: 100px;
         object-fit: contain;
+        margin-bottom: 0.75rem;
+    }
+    
+    .sidebar-logo .ai-text {
+        font-size: 0.9rem;
+        font-weight: 500;
+        letter-spacing: 1px;
+        color: #FFFFFF !important;
+        margin: 0;
+        opacity: 0.9;
+        font-family: 'Poppins', sans-serif;
     }
     
     .sidebar-logo h2 { 
@@ -322,124 +116,185 @@ st.markdown("""
         margin: 0; 
         color: #A0AEC0 !important; 
     }
-    
-    /* Tabs */
-    .stTabs [data-baseweb="tab-list"] { 
-        background-color: transparent !important; 
-        border-bottom: 2px solid #333;
-        gap: 2rem;
-        padding: 0 1rem;
-    }
-    
-    .stTabs [data-baseweb="tab"] {
-        padding: 0.5rem 1rem !important;
-    }
-    
-    .stTabs [data-baseweb="tab"] p { 
-        color: #FFFFFF !important;
-        font-weight: 600 !important;
-        font-size: 1rem !important;
-        transition: all 0.3s ease;
-    }
-    
-    .stTabs [data-baseweb="tab"]:hover p {
-        color: #FF4B4B !important;
-    }
-    
-    .stTabs [aria-selected="true"] { 
-        background-color: transparent !important; 
-        border-bottom: 3px solid #FF4B4B !important;
-    }
-    
-    .stTabs [aria-selected="true"] p { 
-        color: #FFFFFF !important; 
-        -webkit-text-fill-color: #FFFFFF !important; 
-    }
-    
-    /* Metrics */
-    div[data-testid="stMetricValue"] {
-        font-size: 2rem !important;
-        font-weight: 700 !important;
-        color: #FF4B4B !important;
-    }
-    
-    div[data-testid="stMetricLabel"] p {
-        font-size: 0.9rem !important;
-        color: #FFFFFF !important;
-        text-transform: uppercase !important;
-        letter-spacing: 1px !important;
-    }
-    
-    /* Cards para resultados */
-    .result-card {
-        background: linear-gradient(135deg, #1E1E1E 0%, #262730 100%);
-        border: 1px solid #333;
-        border-radius: 12px;
-        padding: 1.5rem;
-        margin: 1rem 0;
-        border-left: 4px solid #FF4B4B;
-    }
-    
-    .result-card h4 {
-        color: #FF4B4B !important;
-        margin-top: 0 !important;
-    }
-    
-    .result-card p {
-        color: #FFFFFF !important;
-    }
-    
-    /* Badges */
-    .badge {
-        display: inline-block;
-        padding: 0.25rem 0.75rem;
-        border-radius: 20px;
-        font-size: 0.8rem;
-        font-weight: 600;
-        margin-right: 0.5rem;
-    }
-    
-    .badge-success {
-        background: rgba(0, 200, 0, 0.2);
-        color: #00FF00 !important;
-        border: 1px solid #00FF00;
-    }
-    
-    .badge-error {
-        background: rgba(255, 0, 0, 0.2);
-        color: #FF4B4B !important;
-        border: 1px solid #FF4B4B;
-    }
-    
-    .badge-warning {
-        background: rgba(255, 165, 0, 0.2);
-        color: #FFA500 !important;
-        border: 1px solid #FFA500;
-    }
-    
-    .badge-info {
-        background: rgba(255, 75, 75, 0.1);
-        color: #FF4B4B !important;
-        border: 1px solid #FF4B4B;
-    }
-    
-    /* Footer */
-    .footer {
-        text-align: center;
-        padding: 2rem;
-        color: #FFFFFF !important;
-        font-size: 0.85rem;
-        border-top: 1px solid #333;
-        margin-top: 3rem;
-    }
-    
-    /* Fallback */
-    .main .element-container p,
-    .main .stMarkdown p,
-    .main .stText p,
-    .main div:not([data-baseweb]) p {
-        color: #FFFFFF !important;
-    }
+
+/* Texto dentro inputs */
+
+div[data-baseweb="input"] input { 
+
+    color: #FFFFFF !important; 
+    -webkit-text-fill-color: #FFFFFF !important; 
+    caret-color: #FF4B4B !important; 
+}
+
+/* ===== SELECTBOX ===== */
+
+div[data-baseweb="select"] * {
+
+    color: #FFFFFF !important;
+    -webkit-text-fill-color: #FFFFFF !important;
+    opacity: 1 !important;
+}
+
+div[data-baseweb="select"] svg {
+
+    fill: #FFFFFF !important;
+}
+
+/* ===== EXPANDERS ===== */
+
+div[data-testid="stExpander"] {
+
+    background-color: #262730 !important;
+    border: 1px solid #4A4A4A !important;
+    border-radius: 12px !important;
+}
+
+/* Texto dentro expander */
+
+div[data-testid="stExpander"] * {
+
+    color: #FFFFFF !important;
+}
+
+/* ===== BOTONES ===== */
+
+.stButton > button {
+
+    background: linear-gradient(
+        135deg,
+        #FF4B4B 0%,
+        #FF6B6B 100%
+    ) !important;
+
+    color: white !important;
+
+    font-weight: 600 !important;
+
+    border-radius: 8px !important;
+
+    padding: 0.75rem 2rem !important;
+}
+
+/* Hover */
+
+.stButton > button:hover {
+
+    transform: translateY(-2px) !important;
+}
+
+/* ===== SIDEBAR ===== */
+
+section[data-testid="stSidebar"] {
+
+    background-color: #1E1E1E !important;
+}
+
+section[data-testid="stSidebar"] * {
+
+    color: #FFFFFF !important;
+}
+
+/* ===== TABS ===== */
+
+.stTabs [data-baseweb="tab"] p {
+
+    color: #FFFFFF !important;
+}
+
+.stTabs [aria-selected="true"] {
+
+    border-bottom: 3px solid #FF4B4B !important;
+}
+
+/* ===== METRICS ===== */
+
+div[data-testid="stMetricValue"] {
+
+    color: #FF4B4B !important;
+    font-weight: 700 !important;
+}
+
+div[data-testid="stMetricLabel"] p {
+
+    color: #FFFFFF !important;
+}
+
+/* ===== RESULT CARDS ===== */
+
+.result-card {
+
+    background: linear-gradient(
+        135deg,
+        #1E1E1E 0%,
+        #262730 100%
+    );
+
+    border: 1px solid #333;
+
+    border-left: 4px solid #FF4B4B;
+
+    border-radius: 12px;
+
+    padding: 1.5rem;
+}
+
+/* ===== BADGES ===== */
+
+.badge {
+
+    display: inline-block;
+
+    padding: 0.25rem 0.75rem;
+
+    border-radius: 20px;
+
+    font-size: 0.8rem;
+
+    font-weight: 600;
+}
+
+.badge-success {
+
+    background: rgba(0,200,0,0.2);
+
+    color: #00FF00 !important;
+
+    border: 1px solid #00FF00;
+}
+
+.badge-error {
+
+    background: rgba(255,0,0,0.2);
+
+    color: #FF4B4B !important;
+
+    border: 1px solid #FF4B4B;
+}
+
+.badge-warning {
+
+    background: rgba(255,165,0,0.2);
+
+    color: #FFA500 !important;
+
+    border: 1px solid #FFA500;
+}
+
+/* ===== FOOTER ===== */
+
+.footer {
+
+    text-align: center;
+
+    padding: 2rem;
+
+    border-top: 1px solid #333;
+
+    margin-top: 3rem;
+
+    color: #FFFFFF !important;
+}
+
 </style>
 """, unsafe_allow_html=True)
 
@@ -569,17 +424,21 @@ if 'fy' not in st.session_state: st.session_state['fy'] = 4200
 
 # ==================== BARRA LATERAL ====================
 with st.sidebar:
+    # Bloque modificado: Imagen centrada con texto debajo
     if logo_base64:
         st.markdown(f"""
         <div class="sidebar-logo">
-            <img src="data:image/png;base64,{logo_base64}" alt="BOSS - Building Operator System">
+            <img src="data:image/png;base64,{logo_base64}" alt="AI Structural Design Assistant">
+            <p class="ai-text">AI Structural Design Assistant</p>
         </div>
         """, unsafe_allow_html=True)
     else:
+        # Fallback en caso de no cargar la imagen
         st.markdown("""
         <div class="sidebar-logo">
             <h2>BOSS</h2>
             <p class="subtitle">Structures</p>
+            <p class="ai-text">AI Structural Design Assistant</p>
         </div>
         """, unsafe_allow_html=True)
     
@@ -1090,56 +949,70 @@ with tab_losas:
 # -----------------------------------------------------------------------------
 # PESTAÑA 6: CONSULTAS
 # -----------------------------------------------------------------------------
+
+try:
+    genai.configure(api_key="AIzaSyAB1bee6Eipt1lAIe9ThxRzA0Rc2hkM3PE")
+except Exception as e:
+    st.error(f"Error al configurar la API Key: {e}")
+
 with tab_consultas:
-    st.header("🤖 Consultor Técnico Estructural")
-    st.markdown("Responde consultas técnicas sobre normas E.030, E.050 y E.060")
-    
-    consulta = st.text_area(
-        "Escribe tu consulta técnica",
-        placeholder="Ej: ¿Cuál es la cuantía mínima para columnas? ¿Cómo verifico derivas?",
-        height=100
+    st.header("🤖 Consultor Técnico Estructural (IA)")
+    st.markdown("Consultas avanzadas sobre **Normas E.030, E.050 y E.060**")
+
+    consulta_usuario = st.text_area(
+        "Haz una pregunta técnica específica:",
+        placeholder="Ej: ¿Cuál es el peralte mínimo de una zapata según la E.060?",
+        height=120,
+        key="input_ia_final"
     )
-    
-    preguntas_frecuentes = st.selectbox(
-        "Preguntas frecuentes",
-        ["Selecciona una pregunta", 
-         "Cuantía mínima en columnas",
-         "Límites de deriva E.030",
-         "Peralte mínimo de zapatas",
-         "Acero en losas"]
-    )
-    
-    if preguntas_frecuentes != "Selecciona una pregunta":
-        consulta = preguntas_frecuentes
-    
-    if st.button("🔍 Consultar", type="primary", use_container_width=True):
-        consulta_lower = consulta.lower()
-        
-        respuestas = {
-            "cuantía mínima": """
-            ### 📌 Cuantía mínima (E.060)
-            - **Columnas:** 1% del área bruta
-            - **Vigas:** 0.24√f'c/fy × b × d
-            - **Losas:** 0.18% del área
-            """,
-            "deriva": """
-            ### 📌 Límites de deriva (E.030)
-            - Concreto armado: **0.007**
-            - Muros estructurales: **0.005**
-            - Albañilería: **0.005**
-            """,
-            "zapata": """
-            ### 📌 Zapatas (E.060)
-            - Peralte mínimo: **40 cm**
-            - Acero mínimo: **0.18%** de b×h
-            """,
-        }
-        
-        for key, value in respuestas.items():
-            if key in consulta_lower:
-                st.markdown(f"""
-                <div class="result-card">
-                    {value}
-                </div>
-                """, unsafe_allow_html=True)
-                break
+
+    if st.button("🚀 PROCESAR CON IA ESTRUCTURAL", use_container_width=True):
+        if not consulta_usuario.strip():
+            st.warning("⚠️ Escribe una consulta técnica primero.")
+        else:
+            with st.spinner("Buscando modelo disponible en tu región..."):
+                try:
+                    # --- AUTO-DETECCIÓN DE MODELO ---
+                    # Listamos los modelos que TU llave API tiene permitidos
+                    modelos_disponibles = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
+                    
+                    if not modelos_disponibles:
+                        st.error("❌ Tu API Key no tiene modelos habilitados. Revisa Google AI Studio.")
+                        st.stop()
+                    
+                    # Elegimos el mejor disponible (preferiblemente flash o pro)
+                    modelo_a_usar = modelos_disponibles[0] 
+                    for m in modelos_disponibles:
+                        if 'flash' in m:
+                            modelo_a_usar = m
+                            break
+                    
+                    # Configuración del modelo detectado
+                    model = genai.GenerativeModel(modelo_a_usar)
+                    
+                    prompt_ingeniero = f"""
+                    Actúa como un Ingeniero Estructural Senior experto en el RNE de Perú.
+                    Responde basándote estrictamente en las normas E.030, E.050 y E.060.
+                    Usa un lenguaje técnico y profesional.
+                    Consulta: {consulta_usuario}
+                    """
+
+                    response = model.generate_content(prompt_ingeniero)
+                    
+                    st.markdown(f"""
+                    <div class="result-card">
+                        <h4 style="color: #FF4B4B;">📋 Respuesta (Modelo detectado: {modelo_a_usar}):</h4>
+                        <div style="color: white; line-height: 1.6;">
+                            {response.text}
+                        </div>
+                    </div>
+                    """, unsafe_allow_html=True)
+                    
+                except Exception as e:
+                    st.error(f"Error definitivo de conexión: {e}")
+                    st.info("""
+                    **Sugerencias para solucionar esto en Comas:**
+                    1. Revisa si tu API Key en [Google AI Studio](https://aistudio.google.com/) está activa.
+                    2. Verifica que no tengas un VPN activado que te sitúe en una región no soportada.
+                    3. Si nada funciona, es posible que debas generar una nueva API Key desde una cuenta de Gmail diferente.
+                    """)
