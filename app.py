@@ -4,7 +4,12 @@ import pandas as pd
 from datetime import datetime
 import base64
 from pathlib import Path
-import google.generativeai as genai
+try:
+    import google.generativeai as genai
+    GEMINI_AVAILABLE = True
+except ModuleNotFoundError:
+    genai = None
+    GEMINI_AVAILABLE = False
 
 # ==================== CONFIGURACIÓN ====================
 st.set_page_config(
@@ -950,14 +955,20 @@ with tab_losas:
 # PESTAÑA 6: CONSULTAS
 # -----------------------------------------------------------------------------
 
-try:
-    genai.configure(api_key="AIzaSyAB1bee6Eipt1lAIe9ThxRzA0Rc2hkM3PE")
-except Exception as e:
-    st.error(f"Error al configurar la API Key: {e}")
+if GEMINI_AVAILABLE:
+    try:
+        genai.configure(api_key="AIzaSyAB1bee6Eipt1lAIe9ThxRzA0Rc2hkM3PE")
+    except Exception as e:
+        st.error(f"Error al configurar la API Key: {e}")
 
 with tab_consultas:
     st.header("🤖 Consultor Técnico Estructural (IA)")
     st.markdown("Consultas avanzadas sobre **Normas E.030, E.050 y E.060**")
+
+    if not GEMINI_AVAILABLE:
+        st.warning(
+            "La librería de IA no está instalada. Instala dependencias con: pip install -r requirements.txt"
+        )
 
     consulta_usuario = st.text_area(
         "Haz una pregunta técnica específica:",
@@ -967,6 +978,9 @@ with tab_consultas:
     )
 
     if st.button("🚀 PROCESAR CON IA ESTRUCTURAL", use_container_width=True):
+        if not GEMINI_AVAILABLE:
+            st.error("No se puede procesar: falta instalar google-generativeai.")
+            st.stop()
         if not consulta_usuario.strip():
             st.warning("⚠️ Escribe una consulta técnica primero.")
         else:
